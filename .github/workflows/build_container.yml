@@ -1,0 +1,33 @@
+---
+name: Build container image
+
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-container-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Build using buildah
+        id: build
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ secrets.DOCKER_REGISTRY }}/osism/skopeo-worker
+          tags: ${{ secrets.DOCKER_REGISTRY }}/osism/skopeo-worker:latest
+          containerfiles: |
+            ./Containerfile
+
+      - name: Push to registry
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build.outputs.image }}
+          tags: ${{ steps.build.outputs.tags }}
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}

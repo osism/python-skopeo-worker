@@ -1,0 +1,12 @@
+---
+- project:
+    merge-mode: squash-merge
+    default-branch: main
+    check:
+      jobs:
+        - flake8
+        - hadolint
+    gate:
+      jobs:
+        - flake8
+        - hadolint
