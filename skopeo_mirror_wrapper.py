@@ -4,11 +4,24 @@ import subprocess
 import sys
 import yaml
 
+from loguru import logger
 
+# environment variables
 mirror_source = os.getenv("MIRROR_SOURCE_URL", "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml")
 mirror_dest = os.getenv("MIRROR_DEST_URL", "registry.airgap.services.osism.tech")
 chunk_size = int(os.getenv("CHUNK_SIZE", "0"))
 chunk_number = int(os.getenv("CHUNK_NUMBER", "0"))
+
+# prepare logger format
+logger.remove()
+logger_format = (
+    "<black>{time:YYYY-MM-DD HH:mm:ss.SSS}</black> | "
+    "<level>{level: <8}</level> | "
+    "<cyan>{extra[container]: <52}</cyan> | "
+    "<level>{message}</level>"
+)
+logger.configure(extra={"container": ""})
+logger.add(sys.stdout, format=logger_format)
 
 
 def load_yaml() -> dict:
@@ -79,24 +92,23 @@ def main():
     containers = load_yaml()
 
     for container in containers:
-        print(f"[{container}] fetching all tags")
-        sys.stdout.flush()
+        smw_logger = logger.bind(container=container)
+        smw_logger.info("fetching all tags")
+
         reg, org, img = container.split("/")
         for tag in get_tags(reg=reg, org=org, img=img):
-            print(f"[{container}] check if tag {tag} is already mirrored")
-            sys.stdout.flush()
+            smw_logger.info(f"tag {tag} started")
+
             result = requests.get(f"https://{mirror_dest}/v2/{org}/{img}/tags/list")
             if "tags" in result.json():
                 if tag in result.json()['tags']:
-                    print(f"[{container}] tag {tag} is already mirrored")
+                    smw_logger.success(f"tag {tag} mirrored")
                     continue
 
             source_uri = f"docker://{reg}/{org}/{img}:{tag}"
             destination_uri = f"docker://{mirror_dest}/{org}/{img}:{tag}"
             command = ["skopeo", "copy", source_uri, destination_uri]
 
-            print(f"[{container}] mirroring tag {tag}")
-            sys.stdout.flush()
             result = subprocess.run(
                 command,
                 capture_output=True,
@@ -105,7 +117,11 @@ def main():
             )
             if result.returncode > 0:
                 if result.stderr:
-                    print(f"[{container}] {result.stderr}")
+                    smw_logger.error(f"tag {tag} {result.stderr}")
+                else:
+                    smw_logger.critical(f"tag {tag} Return code {result.returncode}. No error message received.")
+            else:
+                smw_logger.success(f"tag {tag} mirrored")
 
 
 if __name__ == "__main__":
