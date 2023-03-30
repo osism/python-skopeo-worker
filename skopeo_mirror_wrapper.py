@@ -7,6 +7,8 @@ import yaml
 
 mirror_source = os.getenv("MIRROR_SOURCE_URL", "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml")
 mirror_dest = os.getenv("MIRROR_DEST_URL", "registry.airgap.services.osism.tech")
+chunk_size = int(os.getenv("CHUNK_SIZE", "0"))
+chunk_number = int(os.getenv("CHUNK_NUMBER", "0"))
 
 
 def load_yaml() -> dict:
@@ -16,7 +18,23 @@ def load_yaml() -> dict:
     except yaml.YAMLError as exc:
         print(exc)
 
-    return result['containers']
+    containers = []
+
+    # we are using chunks
+    if chunk_size > 0 and chunk_number > 0:
+        starting_point = chunk_size * (chunk_number - 1)  # substract one, to start at 0
+
+        counter = 0
+        while counter < chunk_size:
+            try:
+                containers.append(result['containers'][counter + starting_point])
+            except IndexError:
+                pass
+            counter = counter + 1
+    else:
+        containers = result['containers']
+
+    return containers
 
 
 def get_tags(reg: str, org: str, img: str) -> list:
@@ -92,3 +110,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
