@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import subprocess
 import sys
@@ -11,6 +12,8 @@ mirror_source = os.getenv("MIRROR_SOURCE_URL", "https://raw.githubusercontent.co
 mirror_dest = os.getenv("MIRROR_DEST_URL", "registry.airgap.services.osism.tech")
 chunk_size = int(os.getenv("CHUNK_SIZE", "0"))
 chunk_number = int(os.getenv("CHUNK_NUMBER", "0"))
+filter = os.getenv("FILTER", "")
+limit = int(os.getenv("LIMIT", "0"))
 
 # prepare logger format
 logger.remove()
@@ -55,18 +58,28 @@ def get_tags(reg: str, org: str, img: str) -> list:
     tags = []
 
     if reg == "quay.io":
-        api = f"https://quay.io/api/v1/repository/{org}/{img}/tag/"
-        results = requests.get(api)
-        if "tags" not in results.json():
-            return []
-        for result in results.json()['tags']:
-            if "expiration" not in result:
-                tags.append(result['name'])
+        # quay, page elements: 50
+        api = f"https://quay.io/api/v1/repository/{org}/{img}/tag/?page="
+        while True:
+            page = page + 1
+
+            url = f"{api}{page}"
+            results = requests.get(url)
+
+            # break if all pages have been scrubbed
+            if results.json()['tags'] == []:
+                break
+
+            for result in results.json()['tags']:
+                if "expiration" not in result:
+                    tags.append(result['name'])
 
     else:
+        # docker, page elements: 10
         api = f"https://registry.hub.docker.com/v2/repositories/{org}/{img}/tags/?page="
         while True:
             page = page + 1
+
             url = f"{api}{page}"
             results = requests.get(url)
 
@@ -96,9 +109,21 @@ def main():
         smw_logger.info("fetching all tags")
 
         reg, org, img = container.split("/")
-        for tag in get_tags(reg=reg, org=org, img=img):
-            smw_logger.info(f"tag {tag} started")
 
+        limit_counter = 0
+        for tag in get_tags(reg=reg, org=org, img=img):
+            # apply filters
+            if filter != "":
+                if not re.match(filter, tag):
+                    continue
+
+            # if limit is set, pull only the given amount of images
+            if limit != 0:
+                limit_counter = limit_counter + 1
+                if limit_counter > limit:
+                    break
+
+            smw_logger.info(f"tag {tag} started")
             result = requests.get(f"https://{mirror_dest}/v2/{org}/{img}/tags/list")
             if "tags" in result.json():
                 if tag in result.json()['tags']:

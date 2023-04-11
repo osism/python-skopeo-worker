@@ -1,0 +1,162 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: update-registry-mirror-1-of-6
+  namespace: registry
+spec:
+  schedule:  "* 1 * * *"  # every day at one o clock
+  concurrencyPolicy: Forbid  # Do not allow parallel containers
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: skopeo-worker
+              image: harbor.services.osism.tech/osism/skopeo-worker:latest
+              imagePullPolicy: Always
+              env:
+                - name: MIRROR_SOURCE_URL
+                  value: "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml"
+                - name: MIRROR_DEST_URL
+                  value: "registry.airgap.services.osism.tech"
+                - name: CHUNK_SIZE
+                  value: "50"
+                - name: CHUNK_NUMBER
+                  value: "1"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: update-registry-mirror-2-of-6
+  namespace: registry
+spec:
+  schedule:  "* 5 * * *"  # every day at five o clock
+  concurrencyPolicy: Forbid  # Do not allow parallel containers
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: skopeo-worker
+              image: harbor.services.osism.tech/osism/skopeo-worker:latest
+              imagePullPolicy: Always
+              env:
+                - name: MIRROR_SOURCE_URL
+                  value: "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml"
+                - name: MIRROR_DEST_URL
+                  value: "registry.airgap.services.osism.tech"
+                - name: CHUNK_SIZE
+                  value: "50"
+                - name: CHUNK_NUMBER
+                  value: "2"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: update-registry-mirror-3-of-6
+  namespace: registry
+spec:
+  schedule:  "* 9 * * *"  # every day at nine o clock
+  concurrencyPolicy: Forbid  # Do not allow parallel containers
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: skopeo-worker
+              image: harbor.services.osism.tech/osism/skopeo-worker:latest
+              imagePullPolicy: Always
+              env:
+                - name: MIRROR_SOURCE_URL
+                  value: "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml"
+                - name: MIRROR_DEST_URL
+                  value: "registry.airgap.services.osism.tech"
+                - name: CHUNK_SIZE
+                  value: "50"
+                - name: CHUNK_NUMBER
+                  value: "3"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: update-registry-mirror-4-of-6
+  namespace: registry
+spec:
+  schedule:  "* 13 * * *"  # every day at 13 o clock
+  concurrencyPolicy: Forbid  # Do not allow parallel containers
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: skopeo-worker
+              image: harbor.services.osism.tech/osism/skopeo-worker:latest
+              imagePullPolicy: Always
+              env:
+                - name: MIRROR_SOURCE_URL
+                  value: "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml"
+                - name: MIRROR_DEST_URL
+                  value: "registry.airgap.services.osism.tech"
+                - name: CHUNK_SIZE
+                  value: "50"
+                - name: CHUNK_NUMBER
+                  value: "4"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: update-registry-mirror-5-of-6
+  namespace: registry
+spec:
+  schedule:  "* 17 * * *"  # every day at 17 o clock
+  concurrencyPolicy: Forbid  # Do not allow parallel containers
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: skopeo-worker
+              image: harbor.services.osism.tech/osism/skopeo-worker:latest
+              imagePullPolicy: Always
+              env:
+                - name: MIRROR_SOURCE_URL
+                  value: "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml"
+                - name: MIRROR_DEST_URL
+                  value: "registry.airgap.services.osism.tech"
+                - name: CHUNK_SIZE
+                  value: "50"
+                - name: CHUNK_NUMBER
+                  value: "5"
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: update-registry-mirror-6-of-6
+  namespace: registry
+spec:
+  schedule:  "* 21 * * *"  # every day at 21 o clock
+  concurrencyPolicy: Forbid  # Do not allow parallel containers
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: skopeo-worker
+              image: harbor.services.osism.tech/osism/skopeo-worker:latest
+              imagePullPolicy: Always
+              env:
+                - name: MIRROR_SOURCE_URL
+                  value: "https://raw.githubusercontent.com/osism/sbom/main/mirrors.yaml"
+                - name: MIRROR_DEST_URL
+                  value: "registry.airgap.services.osism.tech"
+                - name: CHUNK_SIZE
+                  value: "50"
+                - name: CHUNK_NUMBER
+                  value: "6"

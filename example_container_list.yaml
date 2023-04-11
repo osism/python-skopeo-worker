@@ -1,0 +1,4 @@
+---
+containers:
+  - quay.io/osism/homer
+  - registry-1.docker.io/library/mariadb
